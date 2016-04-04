@@ -26,8 +26,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code for updating your particles scans
     particlesScan = zeros(6,n);
     weight = zeros(num,1);    
-    k = 0.1; %damping factor
-    var =1;
+    k = 0.01; %damping factor
+    var =2;
     for i=1:num
         if particles(i).insideMap() ==1
             particlesScan(:,i)= particles(i).ultraScan();
@@ -59,7 +59,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code to check for convergence   
     
     % TODO accept this as a parameter?
-    convergencethreshold = 10;
+    convergencethreshold = 12;
    
     positions = zeros(num, 2);
    
@@ -78,7 +78,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         converged = 1;
     end
     
-    particles_est = mean(positions);
+    particles_mean_est = mean(positions);
+    particles_mode_est = mode(round(positions));
 
     %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
     
@@ -111,7 +112,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         for i =1:num
             particles(i).drawBot(3); %draw particle with line length 3 and default color
         end
-        plot(particles_est(1), particles_est(2),'.r','markersize',20);
+        plot(particles_mode_est(1), particles_mode_est(2),'.r','markersize',20);
+        plot(particles_mean_est(1), particles_mean_est(2),'.g','markersize',20);
         drawnow;
     end
 
