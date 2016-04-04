@@ -25,41 +25,55 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %% Write code for updating your particles scans
     particlesScan = zeros(6,n);
-    weight = zeros(num,1);    
-    k = 0.1; %damping factor
-    var =1;
+    weights = zeros(num,1);    
+    k = 10; %damping factor
+    var =100;
     for i=1:num
-        if particles(i).insideMap() ==1
+        if particles(i).insideMap ==1
             particlesScan(:,i)= particles(i).ultraScan();
             %% Write code for scoring your particles
-            difference = (((sum(particlesScan(:,i)-botScan))/6).^2);
-            weight(i) = k + (1/sqrt(2*pi*var))*exp(-(difference/(2*var))); 
+            difference = ((sum(particlesScan(:,i)-botScan)/6).^2);
+            %fprintf('particle %0.f\t difference %0.f\n', i, difference);
+            weights(i) = k + (1/sqrt(2*pi*var))*exp(-(difference/(2*var))); 
         else
-            weight(i)=0;
+            weights(i)=0;
         end  
     end
     %now need to normalise
-    weights = weight./sum(weight);
+    weights = weights./sum(weights);
     
     %% Write code for resampling your particles
     
+    index_weights = sortrows([weights, (1:num)'], -1);    
+    index_weights(:,1) = cumsum(index_weights(:,1));
+    
+    newParticleLocations = zeros(num, 2);
+    
     for i = 1:num
-        newParticleLocations(i, :) = particles(find(rand() <= cumsum(weights),1)).getBotPos();
+       thresh = rand();
+       for j = 1:num
+            thresh=thresh-index_weights(j, 1);
+            if thresh < 0
+                newParticleLocations(i,:) = particles(j).getBotPos();
+                break;
+            end
+        end
     end
      
-    R=2;
+    R=5;
   
     for i=1:num
         t = 2*pi*rand();
         r=R*sqrt(rand());
         particles(i).setBotPos([newParticleLocations(i,1)+r.*cos(t), newParticleLocations(i,2) + r.*sin(t)]);
     end
-               
+        
+        
     
     %% Write code to check for convergence   
     
     % TODO accept this as a parameter?
-    convergencethreshold = 10;
+    convergencethreshold = 5;
    
     positions = zeros(num, 2);
    
@@ -77,12 +91,10 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     if stdev < convergencethreshold
         converged = 1;
     end
-    
-    particles_est = mean(positions);
 
     %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
     
-    mutation_rate=0.01;
+    mutation_rate=0.05;
     
     mutation_index = ceil(num.*rand(mutation_rate*num,1));
     
@@ -91,10 +103,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end 
     
     
+    
     %% Write code to decide how to move next
     % here they just turn in cicles as an example
     turn = 0.5;
-    move = 3;
+    move = 2;
     botSim.turn(turn); %turn the real robot.  
     botSim.move(move); %move the real robot. These movements are recorded for marking 
     for i =1:num %for all the particles. 
@@ -111,9 +124,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         for i =1:num
             particles(i).drawBot(3); %draw particle with line length 3 and default color
         end
-        plot(particles_est(1), particles_est(2),'.r','markersize',20);
         drawnow;
     end
-
 end
 end
