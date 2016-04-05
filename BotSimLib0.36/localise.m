@@ -1,4 +1,4 @@
-function [botSim] = localise(botSim,map,target)
+function [botSim] = localise(botSim,map,~)
 %This function returns botSim, and accepts, botSim, a map and a target.
 %LOCALISE Template localisation function
 
@@ -25,15 +25,15 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %% Write code for updating your particles scans
     particlesScan = zeros(6,n);
-    weight = zeros(num,1);    
-    k = 0.01; %damping factor
-    var =2;
+    weight = zeros(num,1);  
+    k = 0.0001; %damping factor
+    var =1;
     for i=1:num
         if particles(i).insideMap() ==1
             particlesScan(:,i)= particles(i).ultraScan();
             %% Write code for scoring your particles
-            difference = (((sum(particlesScan(:,i)-botScan))/6).^2);
-            weight(i) = k + (1/sqrt(2*pi*var))*exp(-(difference/(2*var))); 
+            difference = ((sum(norm(sort(particlesScan(:,i))-sort(botScan)))))/6;
+            weight(i) = k + (1/sqrt(2*pi*var))*exp(-((difference^2)/(2*var))); 
         else
             weight(i)=0;
         end  
@@ -59,7 +59,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code to check for convergence   
     
     % TODO accept this as a parameter?
-    convergencethreshold = 12;
+    convergencethreshold = 5;
    
     positions = zeros(num, 2);
    
@@ -78,8 +78,21 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         converged = 1;
     end
     
-    particles_mean_est = mean(positions);
-    particles_mode_est = mode(round(positions));
+    %% Estimating particle position
+    angles = 0;
+    for i=1:num
+        angles=angles+particles(i).getBotAng;
+    end
+    
+    angle=angles/num;
+    
+    particles_mean_est = BotSim(modifiedMap);
+    particles_mean_est.setBotPos(mean(positions));
+    particles_mean_est.setBotAng(angle);
+    
+    particles_mode_est = BotSim(modifiedMap);
+    particles_mode_est.setBotPos(mode(round(positions)));
+    particles_mode_est.setBotAng(angle);
 
     %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
     
@@ -95,13 +108,19 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code to decide how to move next
     % here they just turn in cicles as an example
     turn = 0.5;
-    move = 3;
+    move = 2;
     botSim.turn(turn); %turn the real robot.  
     botSim.move(move); %move the real robot. These movements are recorded for marking 
     for i =1:num %for all the particles. 
         particles(i).turn(turn); %turn the particle in the same way as the real robot
         particles(i).move(move); %move the particle in the same way as the real robot
     end
+    
+    particles_mean_est.turn(turn);
+    particles_mean_est.move(move);
+    
+    particles_mode_est.turn(turn);
+    particles_mode_est.move(move);
     
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking
@@ -112,8 +131,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         for i =1:num
             particles(i).drawBot(3); %draw particle with line length 3 and default color
         end
-        plot(particles_mode_est(1), particles_mode_est(2),'.r','markersize',20);
-        plot(particles_mean_est(1), particles_mean_est(2),'.g','markersize',20);
+        particles_mean_est.drawBot(30, 'r');
+        particles_mode_est.drawBot(30, 'b');
         drawnow;
     end
 
