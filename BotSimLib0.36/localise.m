@@ -25,15 +25,26 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %% Write code for updating your particles scans
     particlesScan = zeros(6,n);
+<<<<<<< HEAD
     weight = zeros(num,1);    
     k = 0.00001; %damping factor
     var =10;
+=======
+    weight = zeros(num,1);  
+    k = 0.0001; %damping factor
+    var =1;
+>>>>>>> origin/master
     for i=1:num
         if particles(i).insideMap() ==1
             particlesScan(:,i)= particles(i).ultraScan();
             %% Write code for scoring your particles
+<<<<<<< HEAD
             difference = norm((particlesScan(:,i))-(botScan));
             weight(i) = k + (1/sqrt(2*pi*var))*exp(-((difference)^2/(2*var))); 
+=======
+            difference = ((sum(norm(sort(particlesScan(:,i))-sort(botScan)))))/6;
+            weight(i) = k + (1/sqrt(2*pi*var))*exp(-((difference^2)/(2*var))); 
+>>>>>>> origin/master
         else
             weight(i)=0;
         end  
@@ -76,8 +87,14 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code to check for convergence   
     
     % TODO accept this as a parameter?
+<<<<<<< HEAD
     convergencethreshold = 2;
     
+=======
+    convergencethreshold = 5;
+   
+    positions = zeros(num, 2);
+>>>>>>> origin/master
    
     % obtain particle positions
     for j = 1:num
@@ -94,8 +111,12 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         converged = 1;
     end
     
+<<<<<<< HEAD
     
         %% Estimating particle position
+=======
+    %% Estimating particle position
+>>>>>>> origin/master
     angles = 0;
     for i=1:num
         angles=angles+particles(i).getBotAng;
@@ -110,6 +131,10 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     particles_mode_est = BotSim(modifiedMap);
     particles_mode_est.setBotPos(mode(round(positions)));
     particles_mode_est.setBotAng(angle);
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
     %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
     
     mutation_rate=0.02;
