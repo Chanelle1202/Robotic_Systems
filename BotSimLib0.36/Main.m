@@ -2,17 +2,13 @@
 % Graph navigation algorithm to determine a path from a given sart point to 
 % any end point in a bounded area. 
 
-close all
-clear all
-clc
-
 %% Initialise specific start and end points
 % start_point = [53;38.5];
 % end_point = [95;70];
 % Robot_location = start_point;
 
 %% Initialise the map and size of the robot
-map=[0,0;60,0;60,45;45,45;45,59;106,59;106,105;0,105];  % representing external boundaries
+map=map;  % representing external boundaries
 robot_size = 6; % used to inflate internal boundaries, the size of the internal border
 
 %% Let the external boundaries form a closed polygon for graphical purposes

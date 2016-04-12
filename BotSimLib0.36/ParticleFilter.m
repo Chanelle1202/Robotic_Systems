@@ -49,13 +49,13 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     pos_diffs = zeros(num, 1);
     
     for i = 1:num
-        botPos = botSim.getBotPos();
+%        botPos = botSim.getBotPos();
         positions(i,:) = particles(i).getBotPos();
-        pos_diffs(i) = sqrt((positions(i,1)-botPos(1))^2 + (positions(i,2)-botPos(2))^2);
+%        pos_diffs(i) = sqrt((positions(i,1)-botPos(1))^2 + (positions(i,2)-botPos(2))^2);
     end
-    
-    figure(2)
-    bar(pos_diffs, weight)
+%     
+%     figure(2)
+%     bar(pos_diffs, weight)
     
     %% Write code for resampling your particles
     
