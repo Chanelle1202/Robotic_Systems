@@ -7,7 +7,7 @@ num =numParticles; % number of particles
 particles(num,1) = BotSim; %how to set up a vector of objects
 for i = 1:num
     particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
-    particles(i).randomPose(0); %spawn the particles in random locations
+    particles(i).randomPose(10); %spawn the particles in random locations
 end
 
 n = 0;
@@ -18,30 +18,29 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %% Write code for updating your particles scans
     scans = 6;
-    particlesScan = zeros(scans,n);
+    particlesScan = zeros(scans,num);
+    difference = zeros(scans,num);
     weight = zeros(num,1);
-    particle_weight = zeros(360,1);
-    k = 0.00001; %damping factor
-    var =10;
+    particle_weight = zeros(scans,1);
+    var = 10;
+    k = 0; %damping factor
     for i=1:num
-        if particles(i).insideMap() ==1  
-            particlesScan(:,i)= particles(i).ultraScan();
-            difference = norm((particlesScan(:,i))-(botScan));
-            weight(i) = k + (1/sqrt(2*pi*var))*exp(-((difference)^2/(2*var)));
-                       
-%             for j=1:scans
-%                 %% Write code for scoring your particles
-%                 difference = norm((particlesScan(:,i))-(botScan));
-%                 particle_weight(j) = k + (1/sqrt(2*pi*var))*exp(-((difference)^2/(2*var)));
-%                 particles(i).turn(pi/scans);
-%             end
-%             [max_weight, max_pos] = max(particle_weight);
-%             weight(i) = max_weight;
-%             particles(i).turn(max_pos*pi/scans);
-        else
-            weight(i)=0;
-        end  
+        if particles(i).insideMap() ==0
+            particles(i).randomPose(0);
+        end
+        particlesScan(:,i)= particles(i).ultraScan();
+%         difference(i) = norm((particlesScan(:,i))-(botScan));
+        for j=1:scans
+            %% Write code for scoring your particles
+            p = circshift(particlesScan(:,i),j); %shift the scans to allow for different orientations
+            difference(j,i) = sqrt(sum((p-botScan).^2)); %difference is Euclidean distance between scan vectors
+            particle_weight(j) = k + (1/sqrt(2*pi*var))*exp(-((difference(j,i))^2/(2*var)));
+        end
+        weight(i) = max(particle_weight);
     end
+      
+%     weight = k + (1/sqrt(2*pi*var)).*exp(-((difference).^2./(2*var)));
+        
     %now need to normalise
     weights = weight./sum(weight);
     
@@ -49,13 +48,21 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     pos_diffs = zeros(num, 1);
     
     for i = 1:num
-%        botPos = botSim.getBotPos();
+
         positions(i,:) = particles(i).getBotPos();
-%        pos_diffs(i) = sqrt((positions(i,1)-botPos(1))^2 + (positions(i,2)-botPos(2))^2);
+
     end
-%     
-%     figure(2)
-%     bar(pos_diffs, weight)
+    
+    if botSim.debug()
+        for i=1:num
+            botPos = botSim.getBotPos();
+            pos_diffs(i) = sqrt((positions(i,1)-botPos(1))^2 + (positions(i,2)-botPos(2))^2);    
+        end
+        figure(4)
+        bar(pos_diffs, weight)
+        figure(5)
+        scatter(min(difference), weight)
+    end
     
     %% Write code for resampling your particles
     
@@ -73,7 +80,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         t = 2*pi*rand();
         r=R*sqrt(rand());
         particles(i).setBotPos([newParticleLocations(i,1)+r.*cos(t), newParticleLocations(i,2) + r.*sin(t)]);
-%         particles(i).setBotAng(newParticleLocations(i,3)+rand());
+%         particles(i).setBotPos([newParticleLocations(i,1), newParticleLocations(i,2)]);
+%         particles(i).setBotAng(newParticleLocations(i,3));
     end
                
     
@@ -114,7 +122,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 
     %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
     
-    mutation_rate=0.01;
+    mutation_rate=0.1;
     
     mutation_index = ceil(num.*rand(mutation_rate*num,1));
     
@@ -124,20 +132,27 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %% Write code to decide how to move next
     % here they just turn in cicles as an example
-    turn = 0.5;
-    move = 2;
-    botSim.turn(turn); %turn the real robot.  
+
+    botScan = botSim.ultraScan();
+    
+    move = botScan(1)*0.3;
+    turn = pi/2;
+    
     botSim.move(move); %move the real robot. These movements are recorded for marking 
-    for i =1:num %for all the particles. 
-        particles(i).turn(turn); %turn the particle in the same way as the real robot
+    botSim.turn(turn);
+
+    for i =1:num %for all the particles.
         particles(i).move(move); %move the particle in the same way as the real robot
+        particles(i).turn(turn); %turn the particle in the same way as the real robot
+
     end
     
+    particles_mean_est.move(move);    
     particles_mean_est.turn(turn);
-    particles_mean_est.move(move);
-    
+
+    particles_mode_est.move(move);   
     particles_mode_est.turn(turn);
-    particles_mode_est.move(move);
+
     
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking

@@ -5,10 +5,10 @@ function [ angle, distance ] = get_angle_dist( start_point, end_point, external_
 % that the required translation and rotation can be performed by the robot.
 
 %% Estimate a path from a given start point to a given end point
-tic % time taken to estimate a path
+%tic % time taken to estimate a path
 inflated_boundaries = boundary_inflation(external_boundaries, robot_size);
 waypoint_coordinates = pathfinder(start_point, end_point, inflated_boundaries);
-toc
+%toc
 
     x1 = waypoint_coordinates(1,1);
     y1 = waypoint_coordinates(1,2);
