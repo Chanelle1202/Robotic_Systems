@@ -20,29 +20,33 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     scans = 6;
     particlesScan = zeros(scans,num);
     difference = zeros(scans,num);
-    weight = zeros(num,1);
+    weight = zeros(num,2);
     particle_weight = zeros(scans,1);
     var = 10;
-    k = 0; %damping factor
+    k = 0.00001; %damping factor
     for i=1:num
         if particles(i).insideMap() ==0
-            particles(i).randomPose(0);
+            particles(i).randomPose(0)
         end
         particlesScan(:,i)= particles(i).ultraScan();
-%         difference(i) = norm((particlesScan(:,i))-(botScan));
+        %         difference(i) = norm((particlesScan(:,i))-(botScan));
         for j=1:scans
             %% Write code for scoring your particles
             p = circshift(particlesScan(:,i),j); %shift the scans to allow for different orientations
             difference(j,i) = sqrt(sum((p-botScan).^2)); %difference is Euclidean distance between scan vectors
             particle_weight(j) = k + (1/sqrt(2*pi*var))*exp(-((difference(j,i))^2/(2*var)));
         end
-        weight(i) = max(particle_weight);
+        [max_weight, max_pos] = max(particle_weight);
+        weight(i, :) = [max_weight, i];
+        particles(i).turn(max_pos*(2*pi/scans));
     end
       
 %     weight = k + (1/sqrt(2*pi*var)).*exp(-((difference).^2./(2*var)));
-        
+    
+    elite_weight = sortrows(weight((num-num/3)+1:end,:), 1);
+
     %now need to normalise
-    weights = weight./sum(weight);
+    weights = elite_weight(:,1)./sum(elite_weight(:,1));
     
     positions = zeros(num, 2);
     pos_diffs = zeros(num, 1);
@@ -59,9 +63,9 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             pos_diffs(i) = sqrt((positions(i,1)-botPos(1))^2 + (positions(i,2)-botPos(2))^2);    
         end
         figure(4)
-        bar(pos_diffs, weight)
+        bar(pos_diffs, weight(:,1))
         figure(5)
-        scatter(min(difference), weight)
+        scatter(min(difference), weight(:,1))
     end
     
     %% Write code for resampling your particles
@@ -70,8 +74,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     for i = 1:num
         j = find(rand() <= cumsum(weights),1);
-        newParticleLocations(i, 1:2) = particles(j).getBotPos();
-        newParticleLocations(i, 3) = particles(j).getBotAng();
+        newParticleLocations(i, 1:2) = particles(elite_weight(j, 2)).getBotPos();
+        newParticleLocations(i, 3) = particles(elite_weight(j,2)).getBotAng();
     end
      
     R=2;
@@ -81,7 +85,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         r=R*sqrt(rand());
         particles(i).setBotPos([newParticleLocations(i,1)+r.*cos(t), newParticleLocations(i,2) + r.*sin(t)]);
 %         particles(i).setBotPos([newParticleLocations(i,1), newParticleLocations(i,2)]);
-%         particles(i).setBotAng(newParticleLocations(i,3));
+        particles(i).setBotAng(newParticleLocations(i,3)+0.3*rand());
     end
                
     
@@ -122,7 +126,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 
     %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
     
-    mutation_rate=0.1;
+    mutation_rate=0.01;
     
     mutation_index = ceil(num.*rand(mutation_rate*num,1));
     
