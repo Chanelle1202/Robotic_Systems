@@ -7,16 +7,13 @@ function [botSim] = localise(botSim,map,target)
 modifiedMap = map; %you need to do this modification yourself
 botSim.setMap(modifiedMap);
 
-scans=20;
-botSim.setScanConfig(botSim.generateScanConfig(scans));
-
 robot_size = 6; % used to inflate internal boundaries, the size of the internal border
 
 %% Particle Filter
 maxNumOfIterations = 50;
-numParticles = 500;
+numParticles = 300;
 
-[botSim, botGhost_mean, botGhost_mode] = ParticleFilter(botSim, modifiedMap,numParticles, maxNumOfIterations, scans);    
+[botSim, botGhost_mean, botGhost_mode] = ParticleFilter(botSim, modifiedMap,numParticles, maxNumOfIterations);    
 
 if botSim.debug()
     mean_distance = sqrt(sum((botSim.getBotPos()-botGhost_mean.getBotPos()).^2))
@@ -35,7 +32,7 @@ if botSim.debug()
     plot(external_boundaries_shifted_draw(:,1), external_boundaries_shifted_draw(:,2), 'Color', 'cyan')
 end
 
-threshold = 5;
+threshold = 10;
 
 
 %% Plot the chosen path
