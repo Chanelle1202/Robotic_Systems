@@ -5,6 +5,7 @@ function [botGhost_mean] = localise(bot,map,target)
 %% setup code
 
 robot_size = 10; % used to inflate internal boundaries, the size of the internal border
+scans = 4;
 
 %you can modify the map to take account of your robots configuration space
 inflated_boundaries = boundary_inflation(map, robot_size); % execute function to draw boundary borders
@@ -16,7 +17,7 @@ modifiedMap = map;
 maxNumOfIterations = 50;
 numParticles = 300;
 
-[bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);    
+[bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);    
 
 % if botSim.debug()
 %     mean_distance = sqrt(sum((botSim.getBotPos()-botGhost_mean.getBotPos()).^2))
@@ -74,7 +75,7 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
     distanceInFront = bot.getDistance_cm();
 
     if (distanceInFront < distance)
-         [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);
+         [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);
     else
         bot.move(distance);
         botGhost_mean.move(distance);

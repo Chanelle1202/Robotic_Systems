@@ -2,10 +2,11 @@ function [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,n
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-    sensorNoise = 0;%1.363160109; % from robot calibration
-    motionNoise = 0;%0.012088592; % from robot calibration
-    turningNoise = 0;%toRadians('degrees', 5.444208795); % from robot calibration
-    
+    sensorNoise = 1.363160109; % from robot calibration - 0;%
+    motionNoise = 0.012088592; % from robot calibration - 0;%
+    turningNoise = toRadians('degrees', 5.444208795); % from robot calibration - 0;%
+        turnBot =pi/4;
+        
 %generate some random particles inside the map
 num =numParticles; % number of particles
 particles(num,1) = BotSim; %how to set up a vector of objects
@@ -19,14 +20,24 @@ n = 0;
 converged =0; %The filter has not converged yet
 while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
-    botScan = bot.ultraScan(); %get a scan from the real robot.
+    
+    botScan = bot.ultraScan() %get a scan from the real robot.
+    
+    while (botScan < 0) 
+        bot.turn(turnBot);
+        
+        for i=1:num
+           particles(i).turn(turnBot); 
+        end
+        botScan = bot.ultraScan() %get a scan from the real robot.
+    end
     
     %% Write code for updating your particles scans
     particlesScan = zeros(scans,num);
     difference = zeros(scans,num);
     weight = zeros(num,1);
     particle_weight = zeros(scans,1);
-    var = 10;
+    var = 50;
     k = 0; %damping factor
     for i=1:num
         if particles(i).insideMap() ==0
@@ -104,10 +115,12 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end    
        
     particles_mean_est = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
+    particles_mean_est.setScanConfig(particles_mean_est.generateScanConfig(scans));
     particles_mean_est.setBotPos(mean(positions));
     particles_mean_est.setBotAng(mean(angles));
     
     particles_mode_est = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
+    particles_mode_est.setScanConfig(particles_mode_est.generateScanConfig(scans));
     particles_mode_est.setBotPos(mode(round(positions)));
     particles_mode_est.setBotAng(mode(round(angles))); % particles_mode_est.setBotAng(mode(round(angles, 2)));
 
@@ -126,12 +139,22 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 
     botScanFront = bot.getDistance_cm();
 
+    while (botScanFront < 0)
+         
+        bot.turn(turnBot);
+        for i=1:num
+            particles(i).turn(turnBot);
+        end
+        
+        botScanFront = bot.getDistance_cm();
+    end
+
     if (botScanFront > 30)
-        move = botScanFront*0.3;
+        move = botScanFront*0.3; % potentially use small fixed increment
     else
         move = 0;
     end
-
+        
     turn = pi/2;
     
     bot.move(move); %move the real robot. These movements are recorded for marking 
@@ -159,8 +182,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
     particles_mean_est.drawBot(30, 'r');
     particles_mode_est.drawBot(30, 'b');
-    
-    plot(target(1),target(2),'Marker','o','Color','g');
     drawnow;
 
     botGhost_mean = particles_mean_est;
@@ -179,9 +200,20 @@ for i=1:360
     botGhost_mean.setBotAng(i*pi/180);
     botGhost_mode.setBotAng(i*pi/180);
 end
-[min_weight_mean, min_pos_mean] = min(difference_mean);
-botGhost_mean.setBotAng(min_pos_mean*pi/180); 
-[min_weight_mode, min_pos_mode]=min(difference_mode);
-botGhost_mode.setBotAng(min_pos_mode*pi/180);
+
+    [min_weight_mean, min_pos_mean] = min(difference_mean);
+    botGhost_mean.setBotAng(min_pos_mean*pi/180); 
+    [min_weight_mode, min_pos_mode]=min(difference_mode);
+    botGhost_mode.setBotAng(min_pos_mode*pi/180);
+    
+    figure(3)
+    hold off; %the drawMap() function will clear the drawing when hold is off
+    particles(1).drawMap();
+
+    botGhost_mean.drawBot(30, 'r');
+    botGhost_mode.drawBot(30, 'b');
+    
+    plot(target(1),target(2),'Marker','o','Color','g');
+    drawnow;
 end
 
