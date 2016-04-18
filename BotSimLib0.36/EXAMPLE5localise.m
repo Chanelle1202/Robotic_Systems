@@ -16,7 +16,6 @@ botSim.drawMap();
 target = [230,70];
 botSim.setBotPos([50,70]);
 
-
 tic %starts timer
 
 %your localisation function is called here.

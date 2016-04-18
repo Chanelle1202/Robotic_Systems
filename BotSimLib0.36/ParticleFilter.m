@@ -8,7 +8,7 @@ particles(num,1) = BotSim; %how to set up a vector of objects
 for i = 1:num
     particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
     particles(i).randomPose(10); %spawn the particles in random locations
-    particles(i).setScanConfig(particles(i).generateScanConfig(scans));
+    particles(i).setScanConfig(generateScanConfig(particles(i), scans));
 end
 
 n = 0;
@@ -115,12 +115,14 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end    
        
     particles_mean_est = BotSim(modifiedMap);
+    particles_mean_est.setScanConfig(particles_mean_est.generateScanConfig(scans));
     particles_mean_est.setBotPos(mean(positions));
     particles_mean_est.setBotAng(mean(angles));
     
     particles_mode_est = BotSim(modifiedMap);
+    particles_mode_est.setScanConfig(particles_mode_est.generateScanConfig(scans));
     particles_mode_est.setBotPos(mode(round(positions)));
-    particles_mode_est.setBotAng(mode(round(angles, 2)));
+    particles_mode_est.setBotAng(mode(round(angles)));
 
     %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
     

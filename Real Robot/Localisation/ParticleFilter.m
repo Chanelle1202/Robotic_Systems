@@ -2,13 +2,15 @@ function [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,n
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-    targetBot = BotSim(modifiedMap)
+    sensorNoise = 0;%1.363160109; % from robot calibration
+    motionNoise = 0;%0.012088592; % from robot calibration
+    turningNoise = 0;%toRadians('degrees', 5.444208795); % from robot calibration
     
 %generate some random particles inside the map
 num =numParticles; % number of particles
 particles(num,1) = BotSim; %how to set up a vector of objects
-for i = 1:num
-    particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
+for i = 1:num 
+    particles(i) = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);  %each particle should use the same map as the botSim object
     particles(i).randomPose(10); %spawn the particles in random locations
     particles(i).setScanConfig(particles(i).generateScanConfig(scans));
 end
@@ -31,7 +33,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             particles(i).randomPose(0);
         end
         particlesScan(:,i)= particles(i).ultraScan();
-%         difference(i) = norm((particlesScan(:,i))-(botScan));
         for j=1:scans
             %% Write code for scoring your particles
             p = circshift(particlesScan(:,i),j); %shift the scans to allow for different orientations
@@ -42,8 +43,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         weight(i) = max_weight;
         particles(i).turn(max_pos*2*pi/scans);
     end
-      
-%     weight = k + (1/sqrt(2*pi*var)).*exp(-((difference).^2./(2*var)));
         
     %now need to normalise
     weights = weight./sum(weight);
@@ -56,17 +55,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         positions(i,:) = particles(i).getBotPos();
 
     end
-    
-%     if botSim.debug()
-%         for i=1:num
-%             botPos = botSim.getBotPos();
-%             pos_diffs(i) = sqrt((positions(i,1)-botPos(1))^2 + (positions(i,2)-botPos(2))^2);    
-%         end
-%         figure(4)
-%         bar(pos_diffs, weight)
-%         figure(5)
-%         scatter(min(difference), weight)
-%     end
     
     %% Write code for resampling your particles
     
@@ -84,7 +72,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         t = 2*pi*rand();
         r=R*sqrt(rand());
         particles(i).setBotPos([newParticleLocations(i,1)+r.*cos(t), newParticleLocations(i,2) + r.*sin(t)]);
-%         particles(i).setBotPos([newParticleLocations(i,1), newParticleLocations(i,2)]);
         particles(i).setBotAng(newParticleLocations(i,3));
     end
                
@@ -116,11 +103,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         angles(i)=particles(i).getBotAng();
     end    
        
-    particles_mean_est = BotSim(modifiedMap);
+    particles_mean_est = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
     particles_mean_est.setBotPos(mean(positions));
     particles_mean_est.setBotAng(mean(angles));
     
-    particles_mode_est = BotSim(modifiedMap);
+    particles_mode_est = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
     particles_mode_est.setBotPos(mode(round(positions)));
     particles_mode_est.setBotAng(mode(round(angles))); % particles_mode_est.setBotAng(mode(round(angles, 2)));
 
@@ -145,7 +132,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         move = 0;
     end
 
-    turn = pi/2;%rand()*;
+    turn = pi/2;
     
     bot.move(move); %move the real robot. These movements are recorded for marking 
     bot.turn(turn);
@@ -164,12 +151,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 
     
     %% Drawing
-    %only draw if you are in debug mode or it will be slow during marking
-%     if botSim.debug()
     figure(3)
     hold off; %the drawMap() function will clear the drawing when hold is off
-    %botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
-    %botSim.drawBot(30,'g'); %draw robot with line length 30 and green
     particles(1).drawMap();
     for i =1:num
         particles(i).drawBot(3); %draw particle with line length 3 and default color
@@ -177,12 +160,9 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     particles_mean_est.drawBot(30, 'r');
     particles_mode_est.drawBot(30, 'b');
     
-    targetBot.setBotPos(target);
-    targetBot.drawBot(30, 'g');
-
+    plot(target(1),target(2),'Marker','o','Color','g');
     drawnow;
-%     end
-    
+
     botGhost_mean = particles_mean_est;
     botGhost_mode = particles_mode_est;
 

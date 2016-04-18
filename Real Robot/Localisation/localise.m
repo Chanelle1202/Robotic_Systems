@@ -58,38 +58,39 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
    
     %botSim.setBotAng(3.14 + angleRadian);
     
-    turn = Robot_direction - angleRadian;
+    turn = angleRadian - Robot_direction;
     
-    while turn > (2 * pi)
-       turn = turn - pi; 
-    end
-    
-    while turn < 0
-        turn = turn + pi;
-    end
+%     while turn > (2 * pi)
+%        turn = turn - pi; 
+%     end
+%     
+%     while turn < 0
+%         turn = turn + pi;
+%     end
     
     bot.turn(turn);
     botGhost_mean.turn(turn);
 
-    botScan = bot.ultraScan();
-    
-    if botScan(1)<= distance;
-        [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);
+    distanceInFront = bot.getDistance_cm();
+
+    if (distanceInFront < distance)
+         [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);
     else
         bot.move(distance);
         botGhost_mean.move(distance);
     end
     
-    botScan = bot.ultraScan();
-    botGhost_meanScan = botGhost_mean.ultraScan();
-    %calculate the difference between the ghost robot and the real robot
-    difference = (sum(botGhost_meanScan-botScan)/6);
+    %     if botScan(1)<= distance;
+%     botScan = bot.ultraScan();
+%     botGhost_meanScan = botGhost_mean.ultraScan();
+%     %calculate the difference between the ghost robot and the real robot
+%     difference = (sum(botGhost_meanScan-botScan)/6);
     
     %Run particle filter if the difference between the ultrasound values is
     %above the threshold
-    if (abs(difference) > threshold)
-        [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);
-    end
+%     if (abs(difference) > threshold)
+%         [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);
+%     end
 
     Robot_location = botGhost_mean.getBotPos();
     
