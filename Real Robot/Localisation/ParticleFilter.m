@@ -189,7 +189,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 
 end
 
-<<<<<<< HEAD
+
 % botScan = bot.ultraScan();
 % difference_mean= [360,1];
 % difference_mode= [360,1];
@@ -207,33 +207,6 @@ end
 % botGhost_mode.setBotAng(min_pos_mode*pi/180);
 
 botGhost = botGhost_mean;
-=======
-botScan = bot.ultraScan();
-difference_mean= [360,1];
-difference_mode= [360,1];
-for i=1:360    
-    botGhost_meanScan = botGhost_mean.ultraScan();
-    botGhost_modeScan = botGhost_mode.ultraScan();
-    difference_mean(i) = norm(botGhost_meanScan-botScan);
-    difference_mode(i) = norm(botGhost_modeScan-botScan);
-    botGhost_mean.setBotAng(i*pi/180);
-    botGhost_mode.setBotAng(i*pi/180);
-end
 
-    [min_weight_mean, min_pos_mean] = min(difference_mean);
-    botGhost_mean.setBotAng(min_pos_mean*pi/180); 
-    [min_weight_mode, min_pos_mode]=min(difference_mode);
-    botGhost_mode.setBotAng(min_pos_mode*pi/180);
-    
-    figure(3)
-    hold off; %the drawMap() function will clear the drawing when hold is off
-    particles(1).drawMap();
-
-    botGhost_mean.drawBot(30, 'r');
-    botGhost_mode.drawBot(30, 'b');
-    
-    plot(target(1),target(2),'Marker','o','Color','g');
-    drawnow;
->>>>>>> origin/master
 end
 
