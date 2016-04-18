@@ -1,4 +1,4 @@
-function [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target)
+function [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -188,20 +188,22 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 
 end
 
-botScan = bot.ultraScan();
-difference_mean= [360,1];
-difference_mode= [360,1];
-for i=1:360    
-    botGhost_meanScan = botGhost_mean.ultraScan();
-    botGhost_modeScan = botGhost_mode.ultraScan();
-    difference_mean(i) = norm(botGhost_meanScan-botScan);
-    difference_mode(i) = norm(botGhost_modeScan-botScan);
-    botGhost_mean.setBotAng(i*pi/180);
-    botGhost_mode.setBotAng(i*pi/180);
-end
-[min_weight_mean, min_pos_mean] = min(difference_mean);
-botGhost_mean.setBotAng(min_pos_mean*pi/180); 
-[min_weight_mode, min_pos_mode]=min(difference_mode);
-botGhost_mode.setBotAng(min_pos_mode*pi/180);
+% botScan = bot.ultraScan();
+% difference_mean= [360,1];
+% difference_mode= [360,1];
+% for i=1:360    
+%     botGhost_meanScan = botGhost_mean.ultraScan();
+%     botGhost_modeScan = botGhost_mode.ultraScan();
+%     difference_mean(i) = norm(botGhost_meanScan-botScan);
+%     difference_mode(i) = norm(botGhost_modeScan-botScan);
+%     botGhost_mean.setBotAng(i*pi/180);
+%     botGhost_mode.setBotAng(i*pi/180);
+% end
+% [min_weight_mean, min_pos_mean] = min(difference_mean);
+% botGhost_mean.setBotAng(min_pos_mean*pi/180); 
+% [min_weight_mode, min_pos_mode]=min(difference_mode);
+% botGhost_mode.setBotAng(min_pos_mode*pi/180);
+
+botGhost = botGhost_mean;
 end
 

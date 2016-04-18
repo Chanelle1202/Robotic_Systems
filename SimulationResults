@@ -1,0 +1,30 @@
+
+var=50 k=0 mutation=0.1 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
+
+    Map1    9.4354                   2.5646               160.57               0               
+    Map2    9.0713                   1.9568               159.73               0               
+    Map3    43.197                   2.9865               611.55               0  
+
+    Average time: 20.5 Average distance: 2.50
+
+    Map1    9.5484                   3.9958               165.05               0               
+    Map2    17.957                   3.1282                242.2               0               
+    Map3    53.356                    21.95               777.56               0 
+
+    Average time: 26.9 Average distance: 9.69
+
+
+var=50 k=0 mutation=0.1 SCANS=20 convergence=2 threshold=2 numParts=500 bot=mean
+
+
+    Map1    19.584                   7.2225               164.11               0               
+    Map2    22.085                   8.6264               135.18               0               
+    Map3    64.244                   8.1677               526.31               0     
+
+    Average time: 35.3043 Average distance: 8.0055
+
+    Map1    10.666                   6.0693               101.98               0               
+    Map2     10.64                   6.2556                84.75               0               
+    Map3    88.003                   24.802               672.76               0     
+
+    Average time: 36.4363 Average distance: 12.3756  

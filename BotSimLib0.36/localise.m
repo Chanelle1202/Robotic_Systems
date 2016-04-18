@@ -7,10 +7,10 @@ function [botSim] = localise(botSim,map,target)
 modifiedMap = map; %you need to do this modification yourself
 botSim.setMap(modifiedMap);
 
-scans=20;
+scans=6;
 botSim.setScanConfig(botSim.generateScanConfig(scans));
 
-robot_size = 6; % used to inflate internal boundaries, the size of the internal border
+robot_size = 3; % used to inflate internal boundaries, the size of the internal border
 
 %% Particle Filter
 maxNumOfIterations = 50;
@@ -19,7 +19,7 @@ numParticles = 500;
 [botSim, botGhost] = ParticleFilter(botSim, modifiedMap,numParticles, maxNumOfIterations, scans);    
 
 if botSim.debug()
-    distance = sqrt(sum((botSim.getBotPos()-botGhost.getBotPos()).^2))
+    distance = sqrt(sum((botSim.getBotPos()-botGhost.getBotPos()).^2));
 end
 %% Path Planning
 
@@ -34,7 +34,7 @@ if botSim.debug()
     plot(external_boundaries_shifted_draw(:,1), external_boundaries_shifted_draw(:,2), 'Color', 'cyan')
 end
 
-threshold = 5;
+
 
 
 %% Plot the chosen path
@@ -73,6 +73,7 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
     botGhostScan = botGhost.ultraScan();
     %calculate the difference between the ghost robot and the real robot
     difference = (sum(botGhostScan-botScan)/scans);
+    threshold = 2;
     
     %Run particle filter if the difference between the ultrasound values is
     %above the threshold
