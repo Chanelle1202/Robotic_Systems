@@ -77,22 +77,39 @@ classdef Bot
         
         function distances_cm = ultraScan(bot)
             % botSim defaults to 6 scan lines over 360*, hence angle is 60*
-            survey = bot.survey(25, 60);
+%             survey = bot.survey(25, 60);
+%             
+%             distances_cm = [ ...
+%                 survey(4, 2); ... % 0* 
+%                 survey(5, 2); ... % 60*
+%                 survey(6, 2); ... % 120*
+%                 survey(1, 2); ... % 180*
+%                 survey(2, 2); ... % 240*
+%                 survey(3, 2) ];    % 300*
+
+            survey = bot.survey(25, 90);
             
             distances_cm = [ ...
-                survey(4, 2); ... % 0* 
-                survey(5, 2); ... % 60*
-                survey(6, 2); ... % 120*
+                survey(3, 2); ... % 0* 
+                survey(4, 2); ... % 90*
                 survey(1, 2); ... % 180*
-                survey(2, 2); ... % 240*
-                survey(3, 2) ];    % 300*
+                survey(2, 2) ];   % 270*
+            
+            if any(distances_cm(:) < 0)
+                distances_cm = -1;
+            end
         end
         
         %% low-level methods
        
         function calibratedDistance_cm = getDistance_cm(bot)
             distance_cm = GetUltrasonic(SENSOR_3);
-            calibratedDistance_cm = 1.0078 * distance_cm + 0.2267;
+            
+            if (distance_cm > 0 && distance_cm < 200)
+                calibratedDistance_cm = 1.0078 * distance_cm + 0.2267;
+            else
+                calibratedDistance_cm = -1;
+            end
         end
 
         function touch = getTouch(bot)
@@ -143,8 +160,9 @@ classdef Bot
             rotateDistanceSensor(bot, power_pct, totAngle_deg);
             
             for i = 1:count
+                distance_cm = getDistance_cm(bot)
                 % obtain distance measurement
-                distances_cm(i,:) = [ totAngle_deg, getDistance_cm(bot) ];
+                distances_cm(i,:) = [ totAngle_deg, distance_cm ];
                 
                 if i < count
                     % update position 

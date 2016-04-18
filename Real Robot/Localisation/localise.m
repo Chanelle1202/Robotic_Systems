@@ -5,6 +5,7 @@ function [botGhost] = localise(bot,map,target)
 %% setup code
 
 robot_size = 10; % used to inflate internal boundaries, the size of the internal border
+scans = 4;
 
 %you can modify the map to take account of your robots configuration space
 inflated_boundaries = boundary_inflation(map, robot_size); % execute function to draw boundary borders
@@ -16,7 +17,11 @@ modifiedMap = map;
 maxNumOfIterations = 50;
 numParticles = 300;
 
+<<<<<<< HEAD
 [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);    
+=======
+[bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);    
+>>>>>>> origin/master
 
 
 %% Path Planning
@@ -54,28 +59,36 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
    
     %botSim.setBotAng(3.14 + angleRadian);
     
-    turn = Robot_direction - angleRadian;
+    turn = angleRadian - Robot_direction;
     
-    while turn > (2 * pi)
-       turn = turn - pi; 
-    end
-    
-    while turn < 0
-        turn = turn + pi;
-    end
+%     while turn > (2 * pi)
+%        turn = turn - pi; 
+%     end
+%     
+%     while turn < 0
+%         turn = turn + pi;
+%     end
     
     bot.turn(turn);
     botGhost.turn(turn);
 
+<<<<<<< HEAD
     botScan = bot.ultraScan();
     
     if botScan(1)<= distance;
         [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);
+=======
+    distanceInFront = bot.getDistance_cm();
+
+    if (distanceInFront < distance)
+         [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);
+>>>>>>> origin/master
     else
         bot.move(distance);
         botGhost.move(distance);
     end
     
+<<<<<<< HEAD
     botScan = bot.ultraScan();
     botGhostScan = botGhost.ultraScan();
     %calculate the difference between the ghost robot and the real robot
@@ -86,6 +99,19 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
     if (abs(difference) > threshold)
         [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);
     end
+=======
+    %     if botScan(1)<= distance;
+%     botScan = bot.ultraScan();
+%     botGhost_meanScan = botGhost_mean.ultraScan();
+%     %calculate the difference between the ghost robot and the real robot
+%     difference = (sum(botGhost_meanScan-botScan)/6);
+    
+    %Run particle filter if the difference between the ultrasound values is
+    %above the threshold
+%     if (abs(difference) > threshold)
+%         [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);
+%     end
+>>>>>>> origin/master
 
     Robot_location = botGhost.getBotPos();
     
