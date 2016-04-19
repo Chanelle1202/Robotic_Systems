@@ -21,7 +21,7 @@ n = 0;
 while(n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     
-    botScan = bot.ultraScan() %get a scan from the real robot.
+    botScan = bot.ultraScan(); %get a scan from the real robot.
     
     while (botScan < 0)  %Catch invalid scan results
         bot.turn(turnBot);
@@ -29,7 +29,7 @@ while(n < maxNumOfIterations) %%particle filter loop
         for i=1:num
            particles(i).turn(turnBot); 
         end
-        botScan = bot.ultraScan() %get a scan from the real robot.
+        botScan = bot.ultraScan(); %get a scan from the real robot.
     end
     
     %% Write code for updating your particles scans
@@ -37,7 +37,7 @@ while(n < maxNumOfIterations) %%particle filter loop
     difference = zeros(scans,num);
     weight = zeros(num,1);
     particle_weight = zeros(scans,1);
-    var = 80;   %variance
+    var = 10;   %variance
     k = 0; %damping factor
     for i=1:num
         if particles(i).insideMap() ==0
@@ -52,7 +52,8 @@ while(n < maxNumOfIterations) %%particle filter loop
         end
         [max_weight, max_pos] = max(particle_weight);
         weight(i) = max_weight;
-        particles(i).turn(max_pos*2*pi/scans); %Give the particle the best orientation
+        particle_angle = particles(i).getBotAng() + max_pos*2*pi/scans;
+        particles(i).setBotAng(mod(particle_angle, 2*pi)); %Give the particle the best orientation
     end
         
     %now need to normalise
@@ -95,11 +96,17 @@ while(n < maxNumOfIterations) %%particle filter loop
     botGhost_mean.setBotPos(mean(positions));
     botGhost_mean.setBotAng(mean(angles));
     
+    'botGhost_mean pos'
+    botGhost_mean.getBotPos()
+    
     %Set the mode estimate
     botGhost_mode = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
     botGhost_mode.setScanConfig(botGhost_mode.generateScanConfig(scans));
     botGhost_mode.setBotPos(mode(round(positions)));
-    botGhost_mode.setBotAng(mode(round(angles)));
+    botGhost_mode.setBotAng(mean(angles));
+    
+    'botGhost_mode_pos'
+    botGhost_mode.getBotPos()
     
         figure(3)
         hold off; %the drawMap() function will clear the drawing when hold is off

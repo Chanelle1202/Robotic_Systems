@@ -37,7 +37,8 @@ while(n < maxNumOfIterations) %%particle filter loop
         end
         [max_weight, max_pos] = max(particle_weight);
         weight(i) = max_weight;
-        particles(i).turn(max_pos*2*pi/scans); %Give the particle the best orientation
+        particle_angle = particles(i).getBotAng() + max_pos*2*pi/scans;
+        particles(i).setBotAng(mod(particle_angle, 2*pi)); %Give the particle the best orientation
     end
         
     %now need to normalise
@@ -86,7 +87,7 @@ while(n < maxNumOfIterations) %%particle filter loop
             pos_diffs(i) = sqrt((positions(i,1)-botPos(1))^2 + (positions(i,2)-botPos(2))^2); 
         end
         figure(4)
-        bar(pos_diffs, weight)
+        stem(pos_diffs, weight)
         figure(5)
         scatter(min(difference), weight)
     end
@@ -100,8 +101,8 @@ while(n < maxNumOfIterations) %%particle filter loop
     %Set the mode estimate
     botGhost_mode = BotSim(modifiedMap);
     botGhost_mode.setScanConfig(botGhost_mode.generateScanConfig(scans));
-    botGhost_mode.setBotPos(mode(round(positions)));
-    botGhost_mode.setBotAng(mode(round(angles, 2)));
+    botGhost_mode.setBotPos(mode(positions));
+    botGhost_mode.setBotAng(mean(angles));
     
     if botSim.debug()
         figure(1)
