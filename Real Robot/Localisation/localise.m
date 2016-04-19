@@ -19,6 +19,9 @@ numParticles = 500;
 
 [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);    
 
+'PFL converveged estimate'
+botGhost.getBotPos()
+
 
 %% Path Planning
 
