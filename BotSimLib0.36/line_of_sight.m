@@ -1,136 +1,93 @@
-function visibility = line_of_sight(observer_state, current_target_node, external_boundaries)
-% Function which determines whether or not the current target node is 
-% visible from the current observer position.
+function visibility = line_of_sight(observerState, currentTargetNode, modifiedMap)
+% Functions that checks if the currentTargetNode is visible from the current obcserver 
 
-%% Divide the observer state into co-ordinates
-x_observer = observer_state(1);
-y_observer = observer_state(2);
-
-%% Divide the current target node int co-ordinates
-x_current_target = current_target_node(1);
-y_current_target = current_target_node(2);
-
-%% Create an empty distance array and initialize the counter
-distance_array = zeros(1,size(external_boundaries,1));
+%% First we need to initialise an empty array for the distance
+distance_array = zeros(1,size(modifiedMap,1));
 i = 0;
 
-for k = 1:1:size(external_boundaries,1)
-    
-    if k < size(external_boundaries,1)
-        
-        % Assign two adjacent points as wall ends (x_1;y_1) and (x_2;y_2)
-        
-        point_1 = [external_boundaries(k,1);external_boundaries(k,2)];
+%% from the given endpoint we can extract the x and y coordinates
+currentTarget_X = currentTargetNode(1);
+currentTarget_Y = currentTargetNode(2);
+
+%% from the given observer node we can extract the x and y coordinates
+observerX = observerState(1);
+observerY = observerState(2);
+
+% We then need to loop through the modified map
+for k = 1:1:size(modifiedMap,1)
+    if k < size(modifiedMap,1)        
+        % below we retrieve the two points where the wall ends
+        point_1 = [modifiedMap(k,1);modifiedMap(k,2)];
+        x_1 = point_1(1);
+        y_1 = point_1(2);      
+        point_2 = [modifiedMap(k+1,1);modifiedMap(k+1,2)];
+        x_2 = point_2(1);
+        y_2 = point_2(2);        
+    elseif k == size(modifiedMap,1)
+        point_1 = [modifiedMap(k,1);modifiedMap(k,2)];
         x_1 = point_1(1);
         y_1 = point_1(2);
-        
-        point_2 = [external_boundaries(k+1,1);external_boundaries(k+1,2)];
+        point_2 = [modifiedMap(1,1);modifiedMap(1,2)];
         x_2 = point_2(1);
-        y_2 = point_2(2);
-        
-    elseif k == size(external_boundaries,1)
-        
-        % Assign the last point as (x_1;y_1) and the first point in the list as (x_2;y_2)
-        
-        point_1 = [external_boundaries(k,1);external_boundaries(k,2)];
-        x_1 = point_1(1);
-        y_1 = point_1(2);
-        
-        point_2 = [external_boundaries(1,1);external_boundaries(1,2)];
-        x_2 = point_2(1);
-        y_2 = point_2(2);
-        
-    end
+        y_2 = point_2(2);        
+    end 
     
-    % Calculate the beam and wall direction vectors
-    beam_direction_vector = [(x_current_target - x_observer) ; (y_current_target - y_observer)];
-    wall_direction_vector = [(x_2-x_1); (y_2-y_1)];
+    %% Next we need to compute the beam direction vector along with the
+    % direction vecotr of the wall
+    beamDirectionV = [(currentTarget_X - observerX) ; (currentTarget_Y - observerY)]; % beam direction vector
+    wallDirectionV = [(x_2-x_1); (y_2-y_1)]; % wall direction vector
     
-    % Check for cosine of the angle between the lines
-    intersection_check = (dot(beam_direction_vector,wall_direction_vector))/( norm(beam_direction_vector)*norm(wall_direction_vector));
+    % Then we need to look for any line intersections
+    intersectionCheck = (dot(beamDirectionV,wallDirectionV))/( norm(beamDirectionV)*norm(wallDirectionV));
     
-    if intersection_check ~= 1 && intersection_check ~= -1 %Make sure that the lines are not parallel (and therefore will intersect)
+    % no intersections occur if the lines themselves are parallel
+    if intersectionCheck ~= 1 && intersectionCheck ~= -1
+        % Next we find distance, p, from the observer to the wall 
+        p_calculationNumerator = (x_2 - x_1)*(y_1 - observerY) - (y_2 - y_1)*(x_1 - observerX);
+        p_calculationDenominator = (x_2 - x_1)*(currentTarget_Y - observerY) - (y_2 - y_1)*(currentTarget_X - observerX);
+        p = p_calculationNumerator/p_calculationDenominator;
         
-        % Find p (distance to wall expressed as a multiplier to the direct distance between the observer and curent target node)
-        p_calculation_numerator = (x_2 - x_1)*(y_1 - y_observer) - (y_2 - y_1)*(x_1 - x_observer);
-        p_calculation_denominator = (x_2 - x_1)*(y_current_target - y_observer) - (y_2 - y_1)*(x_current_target - x_observer);
-        p = p_calculation_numerator/p_calculation_denominator;
-        
-        % Check if the agent is actually facing a wall (true if p >= 0)
-        if p >= 0
-            
-            if (y_2 - y_1) == 0 % Check if the wall is horizontal
-                
-                % find q (intersection position along wall vector)
-                q = ( x_observer - x_1 + p*(x_current_target - x_observer) )/(x_2 - x_1);
-                
-            elseif (x_2 - x_1) == 0 %Check if wall is vertical
-                
-                % find q
-                q = ( y_observer - y_1 + p*(y_current_target - y_observer ) )/(y_2 - y_1);
-                
-            else % If the wall is neither vertical nor horizontal
-                
-                % find q
-                q = ( y_observer - y_1 + p*(y_current_target - y_observer ) )/(y_2 - y_1); %Can use any of the two previous equations for calculating q
-                
-            end
-            
-            % Check if any intersections happen within the wall ends
-            if q >= 0 && q <= 1
-                
-                % Store the p-value
+        if p >= 0   % if this distance p is >= 0 then the observer is indeed facing a wall            
+            if (y_2 - y_1) == 0 % if the wall is horizontal   
+                % we need to find the intersection, q, with the wall vector
+                q = ( observerX - x_1 + p*(currentTarget_X - observerX) )/(x_2 - x_1);         
+            elseif (x_2 - x_1) == 0 % else if the wall is vertical
+                % We need to determine q along the wall vector
+                q = ( observerY - y_1 + p*(currentTarget_Y - observerY ) )/(y_2 - y_1);          
+            else % if the wall is not vertical or horizontal                
+                q = ( observerY - y_1 + p*(currentTarget_Y - observerY ) )/(y_2 - y_1);                 
+            end            
+
+            if q >= 0 && q <= 1 %if intersections occur where all ends meet
                 i = i + 1;
-                distance_array(i) = p;
-                
-            end
-            
-        end
-        
-    end
-    
+                distance_array(i) = p;                
+            end            
+        end        
+    end    
 end
 
-%% Get the minimum value from the first i entries; the other entries may be zero
-% or residual from previous iterations
+%% extract the minimum p value from the distance array
 p_min = min(distance_array(1:i));
 
-if p_min == 0 % If observer coordinates coincide with a wall
-    
-    nonzero_entry_index = (distance_array(1:i) ~= 0); % Only consider nonzero entries i.e. walls that are not coincident with the observer
-    p_min = min(distance_array(nonzero_entry_index)); % Overwrite p_min to a nonzero value
-    
+if p_min == 0 % if the observer is positioned on a wall
+    nonzero_entry_index = (distance_array(1:i) ~= 0); 
+    p_min = min(distance_array(nonzero_entry_index)); 
 end
 
-if p_min < 1 % If a wall is encountered between the observer and the 
-             % current target node
-    visibility = 0; % The robot does not have a direct line of sight to the current target node
-else
-    % Establish whether the path from the current to the target node passes 
-    % beyond the boundaries    
-    % Calculate the midpoint between the current and target nodes
-    x_midpoint = 0.5*(x_observer + x_current_target);
-    y_midpoint = 0.5*(y_observer + y_current_target);
+if p_min < 1 % If wall is between observer and current target
+    visibility = 0; % no direct line_of_sight
+else % compute the midpoint coordinates (x and y) of the line connectine the observer and the target   
+    midpoint_X = 0.5*(observerX + currentTarget_X);
+    midpoint_Y = 0.5*(observerY + currentTarget_Y);   
     
-    % Determine if the midpoint is within the boundaries
-    [IN ON] = inpolygon(x_midpoint,y_midpoint,external_boundaries(:,1),external_boundaries(:,2));
+    % we also need to ensure the computed midpoint is within the boundaries
+    % of the map
+    [IN ON] = inpolygon(midpoint_X,midpoint_Y,modifiedMap(:,1),modifiedMap(:,2));
     
-    % If the path between the current and target nodes lie within the boundaries
+    % if the path is indeed within the boundaries
     if IN == 1 || ON == 1        
-        visibility = 1; % The robot has a direct line of sight to the target node        
+        visibility = 1; % we have can see the target node         
     else        
-        visibility = 0; % The robot does not have a direct line of sight to the current target node        
+        visibility = 0; % we cannot see the target node
     end
-    
 end
-
-
-
-
-
-
-
-
-
-
-
