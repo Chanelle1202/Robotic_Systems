@@ -7,15 +7,16 @@ function [botSim] = localise(botSim,map,target)
 modifiedMap = map; %you need to do this modification yourself
 botSim.setMap(modifiedMap);
 
-scans=6;
+scans=30;
 botSim.setScanConfig(botSim.generateScanConfig(scans));
 
-robot_size = 3; % used to inflate internal boundaries, the size of the internal border
+robot_size = 6; % used to inflate internal boundaries, the size of the internal border
 
 %% Particle Filter
-maxNumOfIterations = 50;
+maxNumOfIterations = 30;
 numParticles = 500;
 
+%botGhost is the estimated botSim
 [botSim, botGhost] = ParticleFilter(botSim, modifiedMap,numParticles, maxNumOfIterations, scans);    
 
 if botSim.debug()
@@ -33,9 +34,6 @@ external_boundaries_shifted_draw(size(external_boundaries_shifted_draw,1)+1,:) =
 if botSim.debug()
     plot(external_boundaries_shifted_draw(:,1), external_boundaries_shifted_draw(:,2), 'Color', 'cyan')
 end
-
-
-
 
 %% Plot the chosen path
 
@@ -62,6 +60,8 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
     
     botScan = botSim.ultraScan();
     
+    %Check the bot won't move through a wall, if so run particle filter
+    %again
     if botScan(1)<= distance;
         [botSim, botGhost] = ParticleFilter(botSim, modifiedMap,numParticles, maxNumOfIterations, scans);
     else
@@ -71,9 +71,10 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
     
     botScan = botSim.ultraScan();
     botGhostScan = botGhost.ultraScan();
+    
     %calculate the difference between the ghost robot and the real robot
     difference = (sum(botGhostScan-botScan)/scans);
-    threshold = 2;
+    threshold = 3;
     
     %Run particle filter if the difference between the ultrasound values is
     %above the threshold
@@ -81,6 +82,7 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
         [botSim, botGhost] = ParticleFilter(botSim, modifiedMap,numParticles, maxNumOfIterations, scans);
     end
 
+    %Estimated robot location
     Robot_location = botGhost.getBotPos();
     
     if botSim.debug()

@@ -38,7 +38,7 @@ noiseLevel(:,1) = [0,0,0]; %no noise
 %if the value is 1 it will run from predefined start and target positions
 %If the number is greater than 1, the first test will be from predefined
 %positions, and the rest will be randomised.
-numberOfrepeats = 10;
+numberOfrepeats = 20;
 
 %Predefined start and target positions
 startPositions =  [20,20;30,20;50,70 ]; %These will change

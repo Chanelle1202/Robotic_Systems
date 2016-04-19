@@ -16,7 +16,6 @@ var=50 k=0 mutation=0.1 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
 
 var=50 k=0 mutation=0.1 SCANS=20 convergence=2 threshold=2 numParts=500 bot=mean
 
-
     Map1    19.584                   7.2225               164.11               0               
     Map2    22.085                   8.6264               135.18               0               
     Map3    64.244                   8.1677               526.31               0     
@@ -28,3 +27,127 @@ var=50 k=0 mutation=0.1 SCANS=20 convergence=2 threshold=2 numParts=500 bot=mean
     Map3    88.003                   24.802               672.76               0     
 
     Average time: 36.4363 Average distance: 12.3756  
+
+var=50 k=0 mutation=0.1 scans=6 convergence=2 threshold=2 numParts=500 BOT=mode
+
+    Map1     11.64                   2.2419               199.86               0               
+    Map2    14.821                   3.9754               215.14               0               
+    Map3    73.684                   31.376               936.91               0               
+
+    Average time: 33.8 Average distance: 12.5311
+
+var=50 k=0 MUTATION=0.01 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
+
+    Map1    7.8588                   5.0901               150.71               0               
+    Map2    18.348                   2.9424               230.56               0               
+    Map3    53.824                   40.197               837.11               0     
+
+    CHANGED MOVEMENT METHOD: move=0.5*rand()*distance
+
+var=50 k=0 MUTATION=0.01 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
+
+    Map1    7.1804                   3.5465               180.03               0               
+    Map2    19.122                   5.5498               420.31               0               
+    Map3    84.742                   11.467               2097.6               0               
+
+    Average time: 37.0148 Average distance: 6.8544
+
+    CHANGED MOVEMENT METHOD: move=0.8*rand()*distance
+
+var=50 k=0 MUTATION=0.01 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
+
+    Map1    6.4692                   2.3946               198.94               0               
+    Map2    16.488                   4.4083                500.8               0               
+    Map3    49.482                   22.047               1645.6               0               
+
+    Average time:  24.1464 Average distance: 9.6166
+
+
+    CHANGED MOVEMENT METHOD: move=rand()*distance
+
+var=50 k=0 MUTATION=0.01 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
+
+    Map1    9.0879                   2.5772               419.32               0               
+    Map2    24.026                   3.7561               933.09               0               
+    Map3     84.14                    21.71               4013.8               0 
+
+    Average time: 39.0846 Average distance: 9.3478
+
+var=50 k=0 mutation=0.1 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
+
+    Map1    8.0546                   2.9871               400.22               0               
+    Map2    27.312                   3.6118               1140.8               0               
+    Map3    141.89                   22.422               5268.9               0               
+
+    Average time: 59.0855 Average distance: 9.6736
+
+var=50 K=0.0001 mutation=0.01 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
+
+
+    Map1    8.6629                   1.8202               451.75               0               
+    Map2    21.417                   5.2111               943.19               0               
+    Map3    80.961                   5.5539               6602.4               0   
+
+    Average time: 37.0083   Average distance: 4.195
+
+var=50 K=0.00001 mutation=0.01 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
+
+    Map1    8.4469                    4.591               439.85               0               
+    Map2    21.509                   3.9086               952.14               0               
+    Map3     67.72                    30.88                 4122               0           
+
+    Average time: 32.558    Average distance: 13.126
+
+    Map1    9.9778                   2.8465               581.55               0               
+    Map2    13.578                   3.0878               616.68               0               
+    Map3    100.99                   4.0179               7113.1               0          
+
+    Average time: 41.515    Average distance:  3.3174
+
+var=50 K=0.0001 mutation=0.01 scans=6 convergence=2 threshold=2 numParts=500 bot=mean
+
+    Map1    23.078                   3.7109               1343.5               0               
+    Map2     16.27                   2.0319                817.6               0               
+    Map3    192.74                   21.168                14098               0        
+
+    Average time: 77.3      Average distance: 8.967
+
+    REMOVED ANGLE CHECK AT END
+
+var=50 k=0 mutation=0.1 scans=6 convergence=2 threshold=2 numParts=500 bot=mode
+
+
+    Map1    9.7289                    2.607                198.4               0               
+    Map2    20.473                   2.9192               330.02               0               
+    Map3    29.044                   4.9625               492.43               0               
+
+    Average time: 19.7  Average distance: 3.5
+
+
+    MOVEMENT MODEL
+
+var=80 k=0.00001 mutation=0 scans=6 convergence=2 threshold=2 numParts=500 bot=mix
+
+
+    Map1    9.1581                   1.4453               104.64               0               
+    Map2     24.11                   1.3167               331.04               0               
+    Map3    218.04                   2.4824               5511.3               0           
+
+    Average time: 83.76 Average distance: 1.74
+
+var=80 k=0.00001 mutation=0.01 scans=6 convergence=2 threshold=2 numParts=500 bot=mix
+
+
+    Map1    27.027                   4.6252               491.98               0               
+    Map2     67.19                   1.8834               1147.9               0               
+    Map3    280.01                   2.6053               7708.7               0       
+
+    Average time: 124.74 Average distance: 3.0379
+
+    NO MOVEMENT MODEL
+
+var=80 k=0.00000001 mutation=0.01 scans=6 convergence=2 threshold=2 numParts=500 bot=mix
+
+    Map1    9.4241                   2.3472               83.327               0               
+    Map2    9.8355                   2.3301               107.48               0               
+    Map3    70.718                   2.7595               1271.4               0            
