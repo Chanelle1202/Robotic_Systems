@@ -7,118 +7,98 @@ function visibilityPath = pathfinder(start_point, end_point, modifiedMap)
 %% Initialize empty arrays
 i_combinedNodes = zeros(size(modifiedMap,1)+2,3);
 
-%% Create initial unvisited nodes array
+%% Create the inital set of unvisited nodes
 i_combinedNodes(1,1:2) = [start_point(1), start_point(2)];
 i_combinedNodes(2:size(modifiedMap,1)+1,1:2) = modifiedMap;
 i_combinedNodes(size(modifiedMap,1)+2,1:2) = [end_point(1), end_point(2)];
 
-%% Assign placeholder/tentative distances to all nodes as infinity
+%% Assign infinte tentative distances to all nodes excpet the initial node
 i_combinedNodes(:,3) = Inf*ones(size(i_combinedNodes,1),1);
 
-%% Identify nodes visible from starting point
+%% Determine which nodes are visible from the initial node / starting point
 visibleNodesID = zeros(1,size(i_combinedNodes,1));
 
-%% Create a library listing the visible neighbours of all of the nodes and 
-%  their distances with respect to the reference nodes 
-
-% Initialize library as an empty three dimensional array
+%% Compile a library of all neighbouring nodes which are visible from the current node
+% First, initialise this library as an empty 3D array 
 visibleNeighboursLibrary =  zeros(size(i_combinedNodes,1),size(i_combinedNodes,2),size(i_combinedNodes,1));
 
-% Initialize visible nodes index to zero
+% Set all the Index values of visible node to 0
 visibleIndex = 0;
 
 for referenceNodeID = 1:size(i_combinedNodes,1)
-    
-    % Copy the i_combinedNodes into a new combinedNodes entry
-    % This will form a new 'page' for each of the reference nodes
     combinedNodes = i_combinedNodes;
-    
     for target_ID = 1:size(i_combinedNodes,1)
-        
-        % Assign observer and target nodes
+        % Initialise the observer and target (endpoint) nodes
         observerState = i_combinedNodes(referenceNodeID,:);
         currentTargetNode = i_combinedNodes(target_ID,:);
         
-        % Check visibility of target node from observer
-        % visibility = line_of_sight(observerState, currentTargetNode, i_combinedNodes);
+        % This checks whether or not the target node is visible from the observer node 
         visibility = line_of_sight(observerState, currentTargetNode, modifiedMap);
-        
-        if visibility == 1 %If target is visible
-            
-            % Record the visible node ID
+        % if it is visible, visibility is set to 1
+        if visibility == 1 
+            % The ID of the visible node is then recorded
             visibleIndex = visibleIndex + 1;
             visibleNodesID(visibleIndex) = target_ID;
-            
-            % Overwrite recorded distance
             combinedNodes(target_ID,3) = sqrt((currentTargetNode(1) - observerState(1))^2 + (currentTargetNode(2) - observerState(2))^2);
-                        
         end
-        
     end
     
-    % Create a three dimensional array representing a library of the visible neighbours with respect to the reference node
-    % The reference node ID is represented by the 'page' number
+    % Compile a 3D library of all the visible neighbouring nodes with respect to a reference node
     visibleNeighboursLibrary(:,:,referenceNodeID) = combinedNodes;
-    
 end
 
-%% Initialize unvisitedNodes
+%% Next, the unvisited nodes are intialised
 unvisitedNodes = zeros(1,size(i_combinedNodes,1));
 
-%% Generate a list of all available nodes and assign them to the unvisited nodes set
+%% Next, a list of all the unvisisted nodes is compiled so that they may be assigned to the unvisited node set
 for index = 1:size(i_combinedNodes)
     unvisitedNodes(index) = index;
 end
-
-%% Copy the first 'page' of the visibleNeighboursLibrary as the initial
-%shortest path array
 shortestPath = visibleNeighboursLibrary(:,:,1);
 
-%% Initialize all of the precursor nodes to 1 (the starting point)
+%% We intialise the starting node to 1
 shortestPath(:,4) = 1;
 
-%% Take out the starting point (node 1) from the unvisited nodes set
+%% We now need to remove the starting node from the univisted node set
 current_node = 1;
 unvisitedNodes = setdiff(unvisitedNodes, current_node);
 
-%% Repeat until the set of unvisited nodes is depleted
+%% the loop below represents the reallocation of the starting node and the removal of the 
+% visited nodes from the univsisted node set until the target node has been visited or the 
+% conditions have been met
 while size(unvisitedNodes,2) > 0
     
-    % Find the node with the smallest nonzero cumulative distance to be assigned as the next current node
+    % The next starting node / current node is node with the smallest cumulative distance
     cumulative_distances = shortestPath(unvisitedNodes,3);
-    [~, currentNodeID_index] = min(cumulative_distances); %First output (~) is not used
+    [~, currentNodeID_index] = min(cumulative_distances); 
     
-    % Extract the current node
+    % The current node is then extraced
     currentNodeID = unvisitedNodes(currentNodeID_index);
     
-    % Take out the current node from the set of unvisited nodes
+    % This line of code removes the current node from the set of unvisited nodes
     unvisitedNodes = setdiff(unvisitedNodes, currentNodeID);
     
-    % Refer to the library to find the distance to visible (neighboring) and UNVISITED nodes
     for unvisited_node_index = 1:size(unvisitedNodes,2)
         
-        % Assign one of the unvisited nodes as the target node
+        % An univisited node is set as the next target node
         target_node_ID = unvisitedNodes(unvisited_node_index);
         
-        % Visibility is implied if the distance recorded between the current and target nodes (in the library) is less than infinity
+        % if the distance between the target node and the current node is less than inifinty, then visibility is assumed
         if visibleNeighboursLibrary(target_node_ID,3,currentNodeID) < Inf
             
-            % Calculate the (tentative) cumulative distance for the target node
+            % the cumulative or tentaive distance for the target node is now computed
             cumulativeNode_distance = shortestPath(currentNodeID,3);
             cumulativeNodeToTarget_distance = visibleNeighboursLibrary(target_node_ID,3,currentNodeID);
             newCumulative_distance = cumulativeNode_distance + cumulativeNodeToTarget_distance;
             
-            % Find the PREVIOUS cumulative distance to the target node
+            % In order to compare this value to the previous, the previous value has to be determined
             previousCumulativetoTarget_distance = shortestPath(target_node_ID,3);
             
-            % If a smaller cumulative distance from the starting node to the
-            % target node, passing through the current node was obtained
+            % if a s maller distance value  is found from the comparison
             if newCumulative_distance < previousCumulativetoTarget_distance
                 
-                %Overwrite the previous cumulative distance to the smaller value
+                % then we need to replace the previous value with the smaller one
                 shortestPath(target_node_ID,3) = newCumulative_distance;
-                
-                %Replace the last precursor node with currentNodeID
                 shortestPath(target_node_ID,4) = currentNodeID;
                 
             end
@@ -130,26 +110,24 @@ while size(unvisitedNodes,2) > 0
 end
 
 
-%% Extract the shortest path
-% Initialize path array
+%% Finally, now we can identify the shortest path 
 path = zeros(1,size(shortestPath,1));
-
-% Assign the end point ID as the first entry on the path array
+% We need to save the path starting with the target node
 path_index = 1;
 path(path_index) = size(i_combinedNodes,1);
 
-while path(path_index) > 1 % Repeat until the starting node is reached
+while path(path_index) > 1 % this is repeated until the starting node is reached
     
     path_index = path_index + 1;
     path(path_index) = shortestPath(path(path_index-1),4);
     
 end
 
-%% Reverse order of path array so that it now points from the starting point to the end point
-% Only consider the first path_index entries; the remaining are only placeholder values (zeros)
+%% Now we can reverse the order of the saved path so that a path is printing 
 path = fliplr(path(1:path_index));
 
-%% Extract the waypoints identified by the entries in the path array
+%% Now for the final part we can extract the waypoint coordinates from this newly 
+% constructed path array to be used in the rest of the code
 visibilityPath(:,1) = i_combinedNodes(path,1);
 visibilityPath(:,2) = i_combinedNodes(path,2);
 end 
