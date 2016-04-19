@@ -87,7 +87,7 @@ while(n < maxNumOfIterations) %%particle filter loop
         angles(i)=particles(i).getBotAng();
     end
    
-
+% TODO: don't use robot motion model here!
     
     %Set the mean estimate
     botGhost_mean = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);

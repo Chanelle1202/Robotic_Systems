@@ -39,6 +39,9 @@ threshold = 10;
 end_point = target;
 
 Robot_location = botGhost.getBotPos();
+
+% TODO: adjust error bound
+
 while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(1) - 0.002 || Robot_location(2) > end_point(2) + 0.002 || Robot_location(2) < end_point(2) - 0.002;
     
     [angle, distance] = get_angle_dist(Robot_location, end_point, map, robot_size);
@@ -55,8 +58,10 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
    
     %botSim.setBotAng(3.14 + angleRadian);
     
+    % TODO: check this
     turn = angleRadian - Robot_direction;
     
+    % TODO: add this back in
 %     while turn > (2 * pi)
 %        turn = turn - pi; 
 %     end
@@ -70,6 +75,8 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
 
     distanceInFront = bot.getDistance_cm();
 
+    % TODO: check if -1
+    
     if (distanceInFront < distance)
          [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);
     else
