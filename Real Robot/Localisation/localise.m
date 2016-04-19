@@ -9,7 +9,7 @@ scans = 4;
 
 %you can modify the map to take account of your robots configuration space
 inflated_boundaries = boundary_inflation(map, robot_size); % execute function to draw boundary borders
-modifiedMap = map;
+modifiedMap = inflated_boundaries;
 %botSim.setMap(modifiedMap);
 
 
@@ -18,6 +18,9 @@ maxNumOfIterations = 50;
 numParticles = 300;
 
 [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);    
+% botGhost = BotSim(modifiedMap);
+% botGhost.setBotPos([80 80]);
+% botGhost.setBotAng(0);
 
 
 %% Path Planning
@@ -29,6 +32,8 @@ inflated_boundaries = boundary_inflation(map, robot_size); % execute function to
 external_boundaries_shifted_draw = inflated_boundaries;
 external_boundaries_shifted_draw(size(external_boundaries_shifted_draw,1)+1,:) = inflated_boundaries(1,:);
 
+plot(map(:,1), map(:,2), 'Color', 'blue')
+
 plot(external_boundaries_shifted_draw(:,1), external_boundaries_shifted_draw(:,2), 'Color', 'cyan')
 
 threshold = 10;
@@ -39,9 +44,12 @@ threshold = 10;
 end_point = target;
 
 Robot_location = botGhost.getBotPos();
+
+botGhost.drawMap();
+plot(target(1), target(2), 'r+');
 while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(1) - 0.002 || Robot_location(2) > end_point(2) + 0.002 || Robot_location(2) < end_point(2) - 0.002;
     
-    [angle, distance] = get_angle_dist(Robot_location, end_point, map, robot_size);
+    [angle, distance] = get_angle_dist(Robot_location, end_point, modifiedMap, robot_size);
     Robot_direction = botGhost.getBotAng();
 %     random_error = rand() / 10; % add a random error to represent robot movement errors
      angleRadian = toRadians('degrees', angle); 
@@ -54,7 +62,7 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
 %     end
    
     %botSim.setBotAng(3.14 + angleRadian);
-    
+    botGhost.drawBot(10,'r');
     turn = angleRadian - Robot_direction;
     
 %     while turn > (2 * pi)
@@ -64,18 +72,21 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
 %     while turn < 0
 %         turn = turn + pi;
 %     end
-    
-    bot.turn(turn);
-    botGhost.turn(turn);
+
+% Added these changes to help correct the rotation of the robot
+    bot.turn(-(pi +turn)); 
+    botGhost.turn(pi + turn);
 
     distanceInFront = bot.getDistance_cm();
+    distanceInFront
+    distance
 
-    if (distanceInFront < distance)
-         [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);
-    else
+    %if (distanceInFront < distance)
+    %     [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);
+    %else
         bot.move(distance);
         botGhost.move(distance);
-    end
+    %end
     
 %     if botScan(1)<= distance;
 %     botScan = bot.ultraScan();
