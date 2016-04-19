@@ -4,20 +4,6 @@ function visibilityPath = pathfinder(start_point, end_point, modifiedMap)
 % in a 2D arena whilst avoiding obstacles. This function uses Visibility
 % Graphs elements to implement the Dijkstra's algorithm.
 
-% INPUTS:
-% Start and end points can either be collumn or row matrices with the first
-% and second entries corresponding to the x and y coordinates respectively
-% External boundaries is in the form of an Mx2 matrix
-% Each of the M rows represent one vertex of the external wall of the arena
-% The first and second collumns represent the x and y coordinates of each
-% vertex.
-
-% OUTPUT:
-% Output is in the form of a Nx2 matrix:
-% Collumns 1 and 2 represent the waypoint  x and y coordinates respectively
-% Each row N represents one of the waypoints
-% Waypoints sorted from the start point to the end point
-
 %% Initialize empty arrays
 i_combinedNodes = zeros(size(modifiedMap,1)+2,3);
 
