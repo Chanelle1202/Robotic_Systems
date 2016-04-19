@@ -9,7 +9,7 @@ i = 0;
 currentTarget_X = currentTargetNode(1);
 currentTarget_Y = currentTargetNode(2);
 
-%% from the given obser node we can extract the x and y coordinates
+%% from the given observer node we can extract the x and y coordinates
 observerX = observerState(1);
 observerY = observerState(2);
 
