@@ -15,7 +15,6 @@ observerY = observerState(2);
 
 % We then need to loop through the modified map
 for k = 1:1:size(modifiedMap,1)
-    
     if k < size(modifiedMap,1)        
         % below we retrieve the two points where the wall ends
         point_1 = [modifiedMap(k,1);modifiedMap(k,2)];
@@ -38,24 +37,16 @@ for k = 1:1:size(modifiedMap,1)
     beamDirectionV = [(currentTarget_X - observerX) ; (currentTarget_Y - observerY)]; % beam direction vector
     wallDirectionV = [(x_2-x_1); (y_2-y_1)]; % wall direction vector
     
-    
     % Then we need to look for any line intersections
     intersectionCheck = (dot(beamDirectionV,wallDirectionV))/( norm(beamDirectionV)*norm(wallDirectionV));
     
-    
-    
     % no intersections occur if the lines themselves are parallel
-    if intersectionCheck ~= 1 && intersectionCheck ~= -1 
-        
-        
-        
+    if intersectionCheck ~= 1 && intersectionCheck ~= -1
         % Next we find distance, p, from the observer to the wall 
         p_calculationNumerator = (x_2 - x_1)*(y_1 - observerY) - (y_2 - y_1)*(x_1 - observerX);
         p_calculationDenominator = (x_2 - x_1)*(currentTarget_Y - observerY) - (y_2 - y_1)*(currentTarget_X - observerX);
         p = p_calculationNumerator/p_calculationDenominator;
-
         
-       
         if p >= 0   % if this distance p is >= 0 then the observer is indeed facing a wall            
             if (y_2 - y_1) == 0 % if the wall is horizontal   
                 % we need to find the intersection, q, with the wall vector
@@ -78,7 +69,6 @@ end
 %% extract the minimum p value from the distance array
 p_min = min(distance_array(1:i));
 
-
 if p_min == 0 % if the observer is positioned on a wall
     nonzero_entry_index = (distance_array(1:i) ~= 0); 
     p_min = min(distance_array(nonzero_entry_index)); 
@@ -94,12 +84,10 @@ else % compute the midpoint coordinates (x and y) of the line connectine the obs
     % of the map
     [IN ON] = inpolygon(midpoint_X,midpoint_Y,modifiedMap(:,1),modifiedMap(:,2));
     
-    
     % if the path is indeed within the boundaries
     if IN == 1 || ON == 1        
         visibility = 1; % we have can see the target node         
     else        
         visibility = 0; % we cannot see the target node
     end
-    
 end
