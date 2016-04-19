@@ -8,6 +8,8 @@ for i = 1:num
     particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
     particles(i).randomPose(10); %spawn the particles in random locations
     particles(i).setScanConfig(generateScanConfig(particles(i), scans));
+    particles(i).setMotionNoise(2); %give the particles some motion noise
+    particles(i).setTurningNoise(pi/10);
 end
 
 n = 0;
@@ -35,7 +37,8 @@ while(n < maxNumOfIterations) %%particle filter loop
         end
         [max_weight, max_pos] = max(particle_weight);
         weight(i) = max_weight;
-        particles(i).turn(max_pos*2*pi/scans); %Give the particle the best orientation
+        particle_angle = particles(i).getBotAng() + max_pos*2*pi/scans;
+        particles(i).setBotAng(mod(particle_angle, 2*pi)); %Give the particle the best orientation
     end
         
     %now need to normalise
@@ -50,16 +53,21 @@ while(n < maxNumOfIterations) %%particle filter loop
         newParticleLocations(i, 1:2) = particles(j).getBotPos();
         newParticleLocations(i, 3) = particles(j).getBotAng();
     end
-     
-    R=2;
-  
+    
     for i=1:num
-        t = 2*pi*rand();
-        r=R*sqrt(rand());
-        particles(i).setBotPos([newParticleLocations(i,1)+r.*cos(t), newParticleLocations(i,2) + r.*sin(t)]);
-%         particles(i).setBotPos([newParticleLocations(i,1), newParticleLocations(i,2)]);
+        particles(i).setBotPos([newParticleLocations(i,1), newParticleLocations(i,2)]);
         particles(i).setBotAng(newParticleLocations(i,3));
     end
+
+     
+%     R=2;
+%   
+%     for i=1:num
+%         t = 2*pi*rand();
+%         r=R*sqrt(rand());
+%         particles(i).setBotPos([newParticleLocations(i,1)+r.*cos(t), newParticleLocations(i,2) + r.*sin(t)]);
+%         particles(i).setBotAng(newParticleLocations(i,3));
+%     end
                  
     %% Estimating particle position   
     
@@ -79,7 +87,7 @@ while(n < maxNumOfIterations) %%particle filter loop
             pos_diffs(i) = sqrt((positions(i,1)-botPos(1))^2 + (positions(i,2)-botPos(2))^2); 
         end
         figure(4)
-        bar(pos_diffs, weight)
+        stem(pos_diffs, weight)
         figure(5)
         scatter(min(difference), weight)
     end
@@ -93,8 +101,8 @@ while(n < maxNumOfIterations) %%particle filter loop
     %Set the mode estimate
     botGhost_mode = BotSim(modifiedMap);
     botGhost_mode.setScanConfig(botGhost_mode.generateScanConfig(scans));
-    botGhost_mode.setBotPos(mode(round(positions)));
-    botGhost_mode.setBotAng(mode(round(angles, 2)));
+    botGhost_mode.setBotPos(mode(positions));
+    botGhost_mode.setBotAng(mean(angles));
     
     if botSim.debug()
         figure(1)
@@ -130,28 +138,20 @@ while(n < maxNumOfIterations) %%particle filter loop
     
     %% Write code to decide how to move next
    
-    if rand()<0.7
+    if rand()<0.7 %most of the time move in the maximum direction
         [max_distance, max_index] = max(botScan); %find maximum possible distance
         turn = (max_index-1)*2*pi/scans; %orientate towards the max distance
         move = max_distance*0.8*rand(); %move a random amount of the max distance, but never the entire distance
-    else
-        index=randi(scans);
+    else %some of the time move in a random direction
+        index=randi(scans); 
         turn = (index-1)*2*pi/scans;
         move= botScan(index)*0.8;
     end
         
     botSim.turn(turn);        
     botSim.move(move); %move the real robot. These movements are recorded for marking 
-    
-    transstd=2; % translation standard deviation in cm
-    orientstd=pi/10; % orientation standard deviation in radians
 
     for i =1:num %for all the particles.
-%         e = 0 + transstd.*randn(1,1); %random Gaussian number with mean 0 and std transstd
-%         f = 0 + (orientstd*(pi/180)).*randn(1,1); %random Gaussian number with mean 0 and std orienstd
-%         particles(i).turn(turn+f); %turn the particle in the same way as the real robot
-%         particles(i).move(move+e); %move the particle in the same way as the real robot
-
           particles(i).turn(turn);
           particles(i).move(move);
     end
