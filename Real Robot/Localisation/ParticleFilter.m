@@ -68,11 +68,8 @@ while(n < maxNumOfIterations) %%particle filter loop
         newParticleLocations(i, 1:2) = particles(j).getBotPos();
         newParticleLocations(i, 3) = particles(j).getBotAng();
     end
-     
-
-  
+    
     for i=1:num
-       
         particles(i).setBotPos([newParticleLocations(i,1), newParticleLocations(i,2)]);
         particles(i).setBotAng(newParticleLocations(i,3));
     end
@@ -95,19 +92,25 @@ while(n < maxNumOfIterations) %%particle filter loop
     botGhost_mean.setScanConfig(botGhost_mean.generateScanConfig(scans));
     botGhost_mean.setBotPos(mean(positions));
     botGhost_mean.setBotAng(mean(angles));
-    
-    'botGhost_mean pos'
-    botGhost_mean.getBotPos()
-    
+       
     %Set the mode estimate
     botGhost_mode = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
     botGhost_mode.setScanConfig(botGhost_mode.generateScanConfig(scans));
     botGhost_mode.setBotPos(mode(round(positions)));
     botGhost_mode.setBotAng(mean(angles));
     
-    'botGhost_mode_pos'
-    botGhost_mode.getBotPos()
+    botGhost_meanScan = botGhost_mean.ultraScan();
+    botGhost_modeScan = botGhost_mode.ultraScan();
+    diff_mean = norm(botGhost_meanScan-botScan);
+    diff_mode = norm(botGhost_modeScan-botScan);
     
+    'Best estimate so far is'
+    if diff_mean < diff_mode
+        botGhost_mean.getBotPos()
+    else
+        botGhost_mode.getBotPos()
+    end
+   
         figure(3)
         hold off; %the drawMap() function will clear the drawing when hold is off
         particles(1).drawMap(); %drawMap() turns hold back on again, so you can draw the botsn
@@ -187,14 +190,14 @@ end
 % botScan = bot.ultraScan();
 difference_mean= zeros(360,1);
 difference_mode= zeros(360,1);
-% for i=1:360    
-%     botGhost_meanScan = botGhost_mean.ultraScan();
-%     botGhost_modeScan = botGhost_mode.ultraScan();
-%     difference_mean(i) = norm(botGhost_meanScan-botScan);
-%     difference_mode(i) = norm(botGhost_modeScan-botScan);
-%     botGhost_mean.setBotAng(i*pi/180);
-%     botGhost_mode.setBotAng(i*pi/180);
-% end
+for i=1:360    
+    botGhost_meanScan = botGhost_mean.ultraScan();
+    botGhost_modeScan = botGhost_mode.ultraScan();
+    difference_mean(i) = norm(botGhost_meanScan-botScan);
+    difference_mode(i) = norm(botGhost_modeScan-botScan);
+    botGhost_mean.setBotAng(i*pi/180);
+    botGhost_mode.setBotAng(i*pi/180);
+end
 
 %find the best orientation for the mean estimate
 [min_diff_mean, min_pos_mean] = min(difference_mean);
