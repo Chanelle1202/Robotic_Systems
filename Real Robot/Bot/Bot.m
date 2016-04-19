@@ -76,24 +76,25 @@ classdef Bot
         end
         
         function distances_cm = ultraScan(bot)
-            % botSim defaults to 6 scan lines over 360*, hence angle is 60*
-%             survey = bot.survey(25, 60);
-%             
-%             distances_cm = [ ...
-%                 survey(4, 2); ... % 0* 
-%                 survey(5, 2); ... % 60*
-%                 survey(6, 2); ... % 120*
-%                 survey(1, 2); ... % 180*
-%                 survey(2, 2); ... % 240*
-%                 survey(3, 2) ];    % 300*
-
-            survey = bot.survey(25, 90);
+% 6 scans
+            survey = bot.survey(25, 60);
             
             distances_cm = [ ...
-                survey(3, 2); ... % 0* 
-                survey(4, 2); ... % 90*
+                survey(4, 2); ... % 0* 
+                survey(5, 2); ... % 60*
+                survey(6, 2); ... % 120*
                 survey(1, 2); ... % 180*
-                survey(2, 2) ];   % 270*
+                survey(2, 2); ... % 240*
+                survey(3, 2) ];    % 300*
+
+% 4 scans
+%             survey = bot.survey(25, 90);
+%             
+%             distances_cm = [ ...
+%                 survey(3, 2); ... % 0* 
+%                 survey(4, 2); ... % 90*
+%                 survey(1, 2); ... % 180*
+%                 survey(2, 2) ];   % 270*
             
             if any(distances_cm(:) < 0)
                 distances_cm = -1;

@@ -5,7 +5,7 @@ function [botGhost] = localise(bot,map,target)
 %% setup code
 
 robot_size = 10; % used to inflate internal boundaries, the size of the internal border
-scans = 4;
+scans = 6;
 
 %you can modify the map to take account of your robots configuration space
 inflated_boundaries = boundary_inflation(map, robot_size); % execute function to draw boundary borders
@@ -14,8 +14,8 @@ modifiedMap = map;
 
 
 %% Particle Filter
-maxNumOfIterations = 50;
-numParticles = 300;
+maxNumOfIterations = 30;
+numParticles = 500;
 
 [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target);    
 
@@ -77,35 +77,7 @@ while Robot_location(1) > end_point(1) + 0.002 || Robot_location(1) < end_point(
         botGhost.move(distance);
     end
     
-%     if botScan(1)<= distance;
-%     botScan = bot.ultraScan();
-%     botGhost_meanScan = botGhost_mean.ultraScan();
-%     %calculate the difference between the ghost robot and the real robot
-%     difference = (sum(botGhost_meanScan-botScan)/6);
-    
-    %Run particle filter if the difference between the ultrasound values is
-    %above the threshold
-%     if (abs(difference) > threshold)
-%         [bot, botGhost_mean, botGhost_mode] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, 6, target);
-%     end
-
     Robot_location = botGhost.getBotPos();
-    
-%     if botSim.debug()
-%         pause(1);
-%     end
 end
-
-    
-%% Drawing
-%only draw if you are in debug mode or it will be slow during marking
-% if botSim.debug()
-%     figure(1)
-%     hold off; %the drawMap() function will clear the drawing when hold is off
-%     botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
-%     botSim.drawBot(30,'g'); %draw robot with line length 30 and green
-%     botGhost.drawBot(30,'r'); %draws the mean ghost bot with line length 30 and red
-%     drawnow;
-% end
 
 end

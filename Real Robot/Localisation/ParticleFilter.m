@@ -1,6 +1,6 @@
 function [bot, botGhost] = ParticleFilter(bot, modifiedMap,numParticles, maxNumOfIterations, scans, target)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+
+%Particle Filter Localisation Function
 
     sensorNoise = 1.363160109; % from robot calibration - 0;%
     motionNoise = 0.012088592; % from robot calibration - 0;%
@@ -13,17 +13,17 @@ particles(num,1) = BotSim; %how to set up a vector of objects
 for i = 1:num 
     particles(i) = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);  %each particle should use the same map as the botSim object
     particles(i).randomPose(10); %spawn the particles in random locations
-    particles(i).setScanConfig(particles(i).generateScanConfig(scans));
+    particles(i).setScanConfig(generateScanConfig(particles(i), scans));
 end
 
 n = 0;
-converged =0; %The filter has not converged yet
-while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
+
+while(n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     
     botScan = bot.ultraScan() %get a scan from the real robot.
     
-    while (botScan < 0) 
+    while (botScan < 0)  %Catch invalid scan results
         bot.turn(turnBot);
         
         for i=1:num
@@ -37,7 +37,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     difference = zeros(scans,num);
     weight = zeros(num,1);
     particle_weight = zeros(scans,1);
-    var = 50;
+    var = 80;   %variance
     k = 0; %damping factor
     for i=1:num
         if particles(i).insideMap() ==0
@@ -52,20 +52,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         end
         [max_weight, max_pos] = max(particle_weight);
         weight(i) = max_weight;
-        particles(i).turn(max_pos*2*pi/scans);
+        particles(i).turn(max_pos*2*pi/scans); %Give the particle the best orientation
     end
         
     %now need to normalise
     weights = weight./sum(weight);
-    
-    positions = zeros(num, 2);
-    pos_diffs = zeros(num, 1);
-    
-    for i = 1:num
-
-        positions(i,:) = particles(i).getBotPos();
-
-    end
     
     %% Write code for resampling your particles
     
@@ -77,61 +68,66 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         newParticleLocations(i, 3) = particles(j).getBotAng();
     end
      
-    R=2;
+
   
     for i=1:num
-        t = 2*pi*rand();
-        r=R*sqrt(rand());
-        particles(i).setBotPos([newParticleLocations(i,1)+r.*cos(t), newParticleLocations(i,2) + r.*sin(t)]);
+       
+        particles(i).setBotPos([newParticleLocations(i,1), newParticleLocations(i,2)]);
         particles(i).setBotAng(newParticleLocations(i,3));
     end
-               
+                 
+    %% Estimating particle position   
+    
+    % obtain particle positions and angles
+    positions = zeros(num, 2);   
+    angles = zeros(num,1);
+   
+    for i = 1:num
+        positions(i,:) = particles(i).getBotPos();
+        angles(i)=particles(i).getBotAng();
+    end
+   
+
+    
+    %Set the mean estimate
+    botGhost_mean = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
+    botGhost_mean.setScanConfig(botGhost_mean.generateScanConfig(scans));
+    botGhost_mean.setBotPos(mean(positions));
+    botGhost_mean.setBotAng(mean(angles));
+    
+    %Set the mode estimate
+    botGhost_mode = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
+    botGhost_mode.setScanConfig(botGhost_mode.generateScanConfig(scans));
+    botGhost_mode.setBotPos(mode(round(positions)));
+    botGhost_mode.setBotAng(mode(round(angles)));
+    
+        figure(3)
+        hold off; %the drawMap() function will clear the drawing when hold is off
+        particles(1).drawMap(); %drawMap() turns hold back on again, so you can draw the botsn
+        for i =1:num
+            particles(i).drawBot(3); %draw particle with line length 3 and default color
+        end
+        botGhost_mean.drawBot(30, 'r');
+        botGhost_mode.drawBot(30, 'b');
+        drawnow;
     
     %% Write code to check for convergence   
     
-    % TODO accept this as a parameter?
-    convergencethreshold = 2;
-   
-    % obtain particle positions
-    for j = 1:num
-        positions(j,:) = particles(j).getBotPos();
-    end
-   
-    % compute standard deviations of particle positions (in x and y
-    % coordinates)
+    convergence_threshold = 5;
+    
+    % compute standard deviations of particle positions
     stdev = std(positions);
    
-    % particle filter has converged if standard deviations are below
-    % convergence threshold
-    if stdev < convergencethreshold
-        converged = 1;
+    % particle filter has converged if standard deviations are below convergence threshold
+    if stdev < convergence_threshold
+        break; %particle filter has converged so break out of while loop immediately before any movement
     end
-    
-    %% Estimating particle position
-
-    angles = zeros(num,1);
-    for i=1:num
-        angles(i)=particles(i).getBotAng();
-    end    
-       
-    particles_mean_est = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
-    particles_mean_est.setScanConfig(particles_mean_est.generateScanConfig(scans));
-    particles_mean_est.setBotPos(mean(positions));
-    particles_mean_est.setBotAng(mean(angles));
-    
-    particles_mode_est = BotSim(modifiedMap, [ sensorNoise, motionNoise, turningNoise ], 0);
-    particles_mode_est.setScanConfig(particles_mode_est.generateScanConfig(scans));
-    particles_mode_est.setBotPos(mode(round(positions)));
-    particles_mode_est.setBotAng(mode(round(angles))); % particles_mode_est.setBotAng(mode(round(angles, 2)));
-
     %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
     
-    mutation_rate=0.1;
-    
-    mutation_index = ceil(num.*rand(mutation_rate*num,1));
+    mutation_rate=0.01;
     
     for i=1:mutation_rate*num
-        particles(mutation_index(i)).randomPose(0);
+        particles(randi(num)).randomPose(0);
     end 
     
     %% Write code to decide how to move next
@@ -165,34 +161,25 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         particles(i).turn(turn); %turn the particle in the same way as the real robot
 
     end
-    
-    particles_mean_est.move(move);    
-    particles_mean_est.turn(turn);
-
-    particles_mode_est.move(move);   
-    particles_mode_est.turn(turn);
 
     
     %% Drawing
+    %only draw if you are in debug mode or it will be slow during marking
     figure(3)
     hold off; %the drawMap() function will clear the drawing when hold is off
-    particles(1).drawMap();
+    particles(1).drawMap(); %drawMap() turns hold back on again, so you can draw the bots
     for i =1:num
         particles(i).drawBot(3); %draw particle with line length 3 and default color
     end
-    particles_mean_est.drawBot(30, 'r');
-    particles_mode_est.drawBot(30, 'b');
-    drawnow;
-
-    botGhost_mean = particles_mean_est;
-    botGhost_mode = particles_mode_est;
-
+    plot(target(1),target(2),'Marker','o','Color','g');
+    drawnow;    
 end
 
+%% More rigorous check of orientation
 
 % botScan = bot.ultraScan();
-% difference_mean= [360,1];
-% difference_mode= [360,1];
+difference_mean= zeros(360,1);
+difference_mode= zeros(360,1);
 % for i=1:360    
 %     botGhost_meanScan = botGhost_mean.ultraScan();
 %     botGhost_modeScan = botGhost_mode.ultraScan();
@@ -201,12 +188,21 @@ end
 %     botGhost_mean.setBotAng(i*pi/180);
 %     botGhost_mode.setBotAng(i*pi/180);
 % end
-% [min_weight_mean, min_pos_mean] = min(difference_mean);
-% botGhost_mean.setBotAng(min_pos_mean*pi/180); 
-% [min_weight_mode, min_pos_mode]=min(difference_mode);
-% botGhost_mode.setBotAng(min_pos_mode*pi/180);
 
-botGhost = botGhost_mean;
+%find the best orientation for the mean estimate
+[min_diff_mean, min_pos_mean] = min(difference_mean);
+botGhost_mean.setBotAng(min_pos_mean*pi/180); 
+
+%find the best orientation for the mode estimate
+[min_diff_mode, min_pos_mode]=min(difference_mode);
+botGhost_mode.setBotAng(min_pos_mode*pi/180);
+
+
+if min_diff_mean < min_diff_mode %pick best from mean or mode estimates
+    botGhost = botGhost_mean;
+else
+    botGhost = botGhost_mode;
+end
 
 end
 
